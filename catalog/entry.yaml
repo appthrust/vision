@@ -1,0 +1,51 @@
+apiVersion: appthrust.io/v1alpha1
+kind: ApplicationStackDefinition
+metadata:
+  name: vision
+spec:
+  display:
+    title: Vision
+    description: Vision chat completions (Qwen3-VL-4B-Instruct-FP8) inside the Project
+      for OCR and image understanding. GPU required (nvidia-gpu).
+    category: assist
+    iconRef:
+      name: vision
+  # Publisher appends release versions here; retain the seed as the compatibility floor.
+  versions:
+  - name: 0.1.0
+    images:
+      web: ghcr.io/appthrust/platform/vision@sha256:52e7e25b368c60d586b31d40d2d419c2955b8bdb7cd61e70e389e5966ec20bb5
+    stream: '0.1'
+    default: true
+    served: true
+  updatePolicy:
+    default: pinned
+    allowed:
+    - pinned
+    - follow
+  components:
+  - id: web
+    definitionRef:
+      name: web-service
+      version: v1
+    defaultValues:
+      tenancy: Dedicated
+      port: 8000
+      minScale: 1
+      internalService: true
+      scratchVolumes:
+      - mountPath: /home/nonroot
+        sizeLimit: 1Gi
+      readinessProbePath: /health
+      livenessProbePath: /healthz
+      accelerator:
+        kind: nvidia-gpu
+        count: 1
+      metrics:
+        path: /metrics
+        port: 8000
+  publish:
+    hostnameLabel: vision
+  provides:
+  - chat-completions.openai/v1
+  releaseIdentityEnvPrefix: VISION
