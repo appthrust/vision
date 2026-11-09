@@ -9,7 +9,7 @@ platform; there is no web frontend or database.
 
 Use Go 1.26 or newer and Bun 1.4.1 for the publisher tests. The public Go SDK is
 [`github.com/appthrust/appserver-go`](https://github.com/appthrust/appserver-go)
-`v0.1.0`, required normally without a platform checkout or module replacement.
+`v0.3.0`, required normally without a platform checkout or module replacement.
 
 ```sh
 go build ./...
@@ -45,6 +45,9 @@ set `VISION_VLLM_BIN=` and `VISION_UPSTREAM` to an HTTP(S) origin without
 credentials, path, query, or fragment. `PLATFORM_PROJECT_ID` is used for logging.
 
 ## Release
+
+Next release: **`v0.3.0`**, upgrading the shared server SDK to v0.3.0.
+The catalog publisher appends the built image; existing version digests stay immutable.
 
 After configuring publication credentials, push a SemVer tag starting at
 `v0.2.0`; the compatibility floor already owns `0.1.0`:
