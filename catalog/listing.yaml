@@ -1,0 +1,64 @@
+locales:
+  en:
+    title: Vision
+    tagline: Read the text in images and describe what they show, with a vision model that runs inside the Project.
+    overview: |
+      Vision gives the apps in a Project an image-understanding model. An app sends an image with an instruction and gets text back: the words printed on a business card or document, or a description of what the picture shows. It suits teams whose apps need OCR or image understanding and who want the images to stay inside the Project.
+
+      Apps call Vision in the OpenAI chat completions format: one message holding an image and the instruction, answered in one piece or streamed. An app that already talks to a chat model can add image input without a new client library.
+
+      Contacts can use Vision to read business cards. When the Project's AI gateway offers the Vision model, Contacts lists it as an in-cluster model in its reading settings, and card images are read without leaving the cluster.
+
+      The model is part of the app and runs offline: nothing is downloaded at runtime, and images and answers stay in the Project. Inference needs an NVIDIA GPU; each running copy uses one, so production plus staging uses two. Each request carries one image of up to 8 MiB, and up to four requests run at the same time. Vision has no screen of its own; other apps in the Project send it requests.
+  ja:
+    title: Vision
+    tagline: 画像の文字を読み取り、写っている内容を説明するモデルを Project の中で使えます。
+    overview: |
+      Vision は、Project 内のアプリが使える画像理解モデルです。アプリが画像と指示を送ると、名刺や書類に印刷された文字や、写真に写っている内容の説明を文章で返します。OCR や画像の理解が必要なアプリを動かしていて、画像を Project の外に出したくないチームに向いています。
+
+      アプリからは OpenAI のチャット補完と同じ形式で呼び出します。画像と指示を 1 通のメッセージにまとめて送り、結果はまとめて受け取ることも、少しずつ受け取ることもできます。すでにチャットモデルを使っているアプリなら、新しいクライアントを用意せずに画像の入力を加えられます。
+
+      Contacts の名刺読み取りにも使えます。Project の AI ゲートウェイが Vision のモデルを提供していると、Contacts の読み取り設定にクラスタ内のモデルとして表示され、名刺画像はクラスタの外に出ないまま読み取られます。
+
+      モデルはアプリに含まれていて、オフラインで動きます。実行中に外部から何かを取得することはなく、画像も結果も Project の中にとどまります。推論には NVIDIA GPU が必要です。動いているコピーごとに 1 基使うため、本番とステージングを動かすと 2 基になります。1 回のリクエストで送れる画像は 1 枚、8 MiB までで、同時に処理するのは 4 件までです。Vision 自体に画面はなく、Project 内のほかのアプリから呼び出して使います。
+highlights:
+  - screenshot: install
+    locales:
+      en:
+        title: Runs on the Project's GPU
+        body: Each running copy uses one NVIDIA GPU. The install dialog shows the count for each branch before anything starts, so you know that production plus staging takes two.
+      ja:
+        title: Project の GPU で動きます
+        body: 動いているコピーごとに NVIDIA GPU を 1 基使います。インストールの画面で、始める前にブランチごとの数が分かります。本番とステージングなら合計 2 基です。
+  - screenshot: catalog
+    locales:
+      en:
+        title: Send an image, get text back
+        body: Apps send one image and an instruction in the OpenAI chat completions format and receive the answer as text, in one piece or streamed. Vision sits in the Assist catalog next to the Project's text chat models.
+      ja:
+        title: 画像を送ると文章で返します
+        body: アプリは OpenAI のチャット補完と同じ形式で画像 1 枚と指示を送り、答えを文章で受け取ります。まとめて受け取ることも、少しずつ受け取ることもできます。カタログでは文章向けのチャットモデルと同じ Assist に並んでいます。
+  - screenshot: versions
+    locales:
+      en:
+        title: The model ships with the app
+        body: Every version includes the model weights and runs offline, so nothing is fetched at runtime and images stay in the Project. Pin a version, or follow its release line to get updates automatically.
+      ja:
+        title: モデルはアプリに同梱
+        body: どのバージョンにもモデルの重みが入っていて、オフラインで動きます。実行中に外部から取得するものはなく、画像は Project の外に出ません。バージョンは固定することも、リリースラインに沿って自動で更新することもできます。
+screenshots:
+  - name: install
+    file: install.webp
+    alt:
+      en: The Dashboard install dialog for Vision with version 0.2.0 selected, update and branch options, and an accelerator table showing one NVIDIA GPU for production, one for staging, two in total.
+      ja: Dashboard の Vision インストール画面。バージョン 0.2.0、更新とブランチの選択肢、アクセラレータの表（本番 1、ステージング 1、合計 2 NVIDIA GPU）が表示されています。
+  - name: catalog
+    file: catalog.webp
+    alt:
+      en: The Marketplace catalog in the Dashboard, showing the Assist apps AI Gateway, Embedding, Inference, Knowledge, LLM and Vision as cards, with an Install button on the Vision card.
+      ja: Dashboard のマーケットプレイスのカタログ。Assist の AI Gateway、Embedding、Inference、Knowledge、LLM、Vision がカードで並び、Vision のカードにインストールボタンがあります。
+  - name: versions
+    file: versions.webp
+    alt:
+      en: The Vision page in the Dashboard Marketplace with its description, an Install button, update options, and the version list 0.1.0 and 0.2.0, with 0.2.0 marked as the default.
+      ja: Dashboard マーケットプレイスの Vision のページ。説明文、インストールボタン、更新の選択肢、バージョン一覧（0.1.0 と既定の 0.2.0）が表示されています。
