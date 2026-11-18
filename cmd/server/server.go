@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/appthrust/appserver-go/appserver/httpx"
+	"github.com/appthrust/appserver-go/appserver/requestlog"
 )
 
 const (
@@ -44,6 +45,9 @@ func newHandler(upstream *url.URL, ready func() bool) http.Handler {
 		},
 		FlushInterval: -1, // Forward SSE chunks immediately, without buffering a completion.
 		ModifyResponse: func(r *http.Response) error {
+			if r.StatusCode >= http.StatusBadRequest && r.StatusCode < 600 && r.Request != nil {
+				requestlog.SetOutcome(r.Request, "upstream_error", "upstream_http_status")
+			}
 			r.Header.Set("Cache-Control", "no-store")
 			return nil
 		},
@@ -54,6 +58,18 @@ func newHandler(upstream *url.URL, ready func() bool) http.Handler {
 				writeError(w, http.StatusBadGateway, "vision_upstream_unavailable", "The vision upstream could not complete this request")
 			}
 		},
+	}
+	serveProxy := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if p := recover(); p != nil {
+				// ReverseProxy aborts the connection on a body copy failure after headers.
+				if p == http.ErrAbortHandler {
+					requestlog.SetOutcome(r, "stream_aborted", "proxy_copy_failed")
+				}
+				panic(p)
+			}
+		}()
+		proxy.ServeHTTP(w, r)
 	}
 	slots := make(chan struct{}, maxInFlight)
 	modelJSON, _ := json.Marshal(servedModel)
@@ -110,13 +126,13 @@ func newHandler(upstream *url.URL, ready func() bool) http.Handler {
 		r = r.WithContext(ctx)
 		r.Body = io.NopCloser(bytes.NewReader(payload))
 		r.ContentLength = int64(len(payload))
-		proxy.ServeHTTP(w, r)
+		serveProxy(w, r)
 	})
 	for _, path := range []string{"/v1/models", "/metrics"} {
 		mux.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
 			defer cancel()
-			proxy.ServeHTTP(w, r.WithContext(ctx))
+			serveProxy(w, r.WithContext(ctx))
 		})
 	}
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
