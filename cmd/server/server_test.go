@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -176,6 +177,38 @@ func TestProxyStreamsBeforeCompletion(t *testing.T) {
 	line, err := bufio.NewReader(resp.Body).ReadString('\n')
 	require.NoError(t, err)
 	require.Equal(t, "data: {\"choices\":[]}\n", line)
+}
+
+func TestRequestLogRecordsAbortedVisionStream(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Content-Length", "100")
+		_, _ = io.WriteString(w, "data: private-value\n\n")
+	}))
+	defer upstream.Close()
+	u, err := url.Parse(upstream.URL)
+	require.NoError(t, err)
+	var output bytes.Buffer
+	server := newHTTPServer(u, func() bool { return true }, &output)
+	r := httptest.NewRequest(http.MethodPost, "/v1/chat/completions?private-value", strings.NewReader(`{"stream":true}`))
+	// ReverseProxy propagates copy failures as ErrAbortHandler when serving an HTTP server.
+	r = r.WithContext(context.WithValue(r.Context(), http.ServerContextKey, server))
+	w := httptest.NewRecorder()
+	require.PanicsWithValue(t, http.ErrAbortHandler, func() { server.Handler.ServeHTTP(w, r) })
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, "data: private-value\n\n", w.Body.String())
+
+	var entry struct {
+		Service, Outcome, Reason string
+		Status                   int
+	}
+	require.NoError(t, json.Unmarshal(output.Bytes(), &entry))
+	require.Equal(t, 1, bytes.Count(output.Bytes(), []byte("\n")))
+	require.Equal(t, "vision", entry.Service)
+	require.Equal(t, http.StatusOK, entry.Status)
+	require.Equal(t, "stream_aborted", entry.Outcome)
+	require.Equal(t, "proxy_copy_failed", entry.Reason)
+	require.NotContains(t, output.String(), "private-value")
 }
 
 func TestModelsAndMetricsAreForwardedUnchanged(t *testing.T) {
